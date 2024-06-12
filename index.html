@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PySphere - An Online Python Interpreter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/eclipse.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/monokai.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.css">
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --button-bg: #007BFF;
+            --button-bg-hover: #0056b3;
+            --editor-bg: #ffffff;
+            --editor-border: #cccccc;
+            --output-bg: #f0f0f0;
+            --line-number-color: #333333;
+            --editor-text-color: #000000;
+        }
+
+        body.dark-mode {
+            --bg-color: #1e1e1e;
+            --text-color: #e0e0e0;
+            --button-bg: #444444;
+            --button-bg-hover: #222222;
+            --editor-bg: #2d2d2d;
+            --editor-border: #555555;
+            --output-bg: #333333;
+            --line-number-color: #e0e0e0;
+            --editor-text-color: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 90%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--bg-color);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: var(--text-color);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .CodeMirror {
+            height: 400px;
+            background-color: var(--editor-bg);
+            border: 1px solid var(--editor-border);
+            border-radius: 4px;
+            color: var(--editor-text-color);
+        }
+
+        .CodeMirror-linenumber {
+            color: var(--line-number-color) !important;
+        }
+
+        .button-container {
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: var(--button-bg);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--button-bg-hover);
+        }
+
+        #output {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: var(--output-bg);
+            border: solid 1px var(--editor-border);
+            border-radius: 4px;
+            color: var(--text-color);
+        }
+
+        #themeToggle {
+            margin-left: 10px;
+        }
+
+        #presetCodes {
+            margin-right: 10px;
+        }
+
+        .username-input {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .username-input label {
+            margin-right: 10px;
+        }
+
+        .username-input input {
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid var(--editor-border);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PySphere - An Online Python Interpreter</h1>
+        <div class="username-input">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" placeholder="Enter your username">
+        </div>
+        <textarea id="code" name="code"></textarea>
+        <div class="button-container">
+            <select id="presetCodes">
+                <option value="">Select Preset Code</option>
+                <option value="bmiCalculator">BMI Calculator</option>
+                <option value="simpleStorage">Simple Storage System</option>
+                <option value="fibonacciSequence">Fibonacci Sequence</option>
+                <option value="primeChecker">Prime Number Checker</option>
+                <option value="basicCalculator">Basic Calculator</option>
+            </select>
+            <button id="runButton">Run Locally</button>
+            <button id="saveButton">Save</button>
+            <button id="shareButton">Share Code</button>
+            <button id="themeToggle">Toggle Dark Mode</button>
+        </div>
+        <pre id="output"></pre>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/python-hint.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.0.0/dist/skulpt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.0.0/dist/skulpt-stdlib.js"></script>
+    <script>
+        var editor = CodeMirror.fromTextArea(document.getElementById('code'), {
+            mode: "python",
+            theme: "eclipse",
+            lineNumbers: true,
+            autoCloseBrackets: true,
+            matchBrackets: true,
+            showCursorWhenSelecting: true,
+            extraKeys: {"Ctrl-Space": "autocomplete"}
+        });
+
+        var globalScope = {};
+
+        function builtinRead(x) {
+            if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
+                throw "File not found: '" + x + "'";
+            return Sk.builtinFiles["files"][x];
+        }
+
+        function runCode() {
+            var prog = editor.getValue();
+            var mypre = document.getElementById("output");
+            mypre.innerHTML = '';
+            Sk.pre = "output";
+            Sk.configure({ output: outf, read: builtinRead });
+            var myPromise = Sk.misceval.asyncToPromise(function() {
+                return Sk.importMainWithBody("<stdin>", false, prog, true);
+            });
+            myPromise.then(function(mod) {
+                globalScope = mod.$d;
+                console.log('success');
+            },
+                function(err) {
+                    mypre.innerHTML = err.toString();
+                });
+        }
+
+        function outf(text) {
+            var mypre = document.getElementById("output");
+            mypre.innerHTML += text;
+        }
+
+        document.getElementById("runButton").onclick = runCode;
+        document.getElementById("saveButton").onclick = function() {
+            var username = document.getElementById('username').value;
+            if (username.trim()) {
+                localStorage.setItem(username + '_pythonCode', editor.getValue());
+            } else {
+                alert('Please enter a username to save your code.');
+            }
+        };
+
+        function loadCode() {
+            var username = document.getElementById('username').value;
+            if (username.trim()) {
+                var storedCode = localStorage.getItem(username + '_pythonCode');
+                if (storedCode) {
+                    editor.setValue(storedCode);
+                } else {
+                    alert('No saved code found for this username.');
+                }
+            } else {
+                alert('Please enter a username to load your code.');
+            }
+        }
+
+        document.getElementById('username').addEventListener('blur', loadCode);
+
+        document.getElementById("themeToggle").addEventListener("click", function() {
+            document.body.classList.toggle("dark-mode");
+        });
+
+        document.getElementById("presetCodes").addEventListener("change", function() {
+            var code = this.value;
+            if (code === "") return;
+            switch (code) {
+                case "bmiCalculator":
+                    editor.setValue(`# BMI Calculator
+height = float(input("Enter height in meters: "))
+weight = float(input("Enter weight in kilograms: "))
+
+bmi = weight / (height ** 2)
+print("Your BMI is:", bmi)`);
+                    break;
+                case "simpleStorage":
+                    editor.setValue(`# Simple Storage System
+storage = {}
+
+def add_item(key, value):
+    storage[key] = value
+
+def get_item(key):
+    return storage.get(key)
+
+def remove_item(key):
+    if key in storage:
+        del storage[key]
+
+# Example usage
+add_item('name', 'John Doe')
+print(get_item('name'))
+remove_item('name')`);
+                    break;
+                case "fibonacciSequence":
+                    editor.setValue(`# Fibonacci Sequence
+def fibonacci(n):
+    sequence = [0, 1]
+    while len(sequence) < n:
+        sequence.append(sequence[-1] + sequence[-2])
+    return sequence
+
+n = int(input("Enter the number of Fibonacci numbers to generate: "))
+print(fibonacci(n))`);
+                    break;
+                case "primeChecker":
+                    editor.setValue(`# Prime Number Checker
+def is_prime(n):
+    if n <= 1:
+        return False
+    for i in range(2, int(n ** 0.5) + 1):
+        if n % i == 0:
+            return False
+    return True
+
+num = int(input("Enter a number to check if it is prime: "))
+print(f"{num} is prime: {is_prime(num)}")`);
+                    break;
+                case "basicCalculator":
+                    editor.setValue(`# Basic Calculator
+def add(a, b):
+    return a + b
+
+def subtract(a, b):
+    return a - b
+
+def multiply(a, b):
+    return a * b
+
+def divide(a, b):
+    if b == 0:
+        return "Cannot divide by zero!"
+    return a / b
+
+# Example usage
+print(add(2, 3))
+print(subtract(5, 2))
+print(multiply(3, 4))
+print(divide(10, 2))`);
+                    break;
+            }
+        });
+
+        function showSuggestions(editor) {
+            var keywords = ["print", "for", "if", "else", "elif", "while", "def", "class", "return", "import"];
+            var cursor = editor.getCursor();
+            var token = editor.getTokenAt(cursor);
+            var start = token.start;
+            var end = cursor.ch;
+            var line = cursor.line;
+            var currentWord = token.string;
+
+            if (currentWord.length > 0) {
+                var list = keywords.filter(function (item) {
+                    return item.indexOf(currentWord) === 0;
+                }).sort();
+
+                if (list.length > 0) {
+                    return {
+                        list: list,
+                        from: CodeMirror.Pos(line, start),
+                        to: CodeMirror.Pos(line, end)
+                    };
+                }
+            }
+            return;
+        }
+
+        CodeMirror.registerHelper("hint", "python", function (editor) {
+            return showSuggestions(editor);
+        });
+
+        editor.on("inputRead", function(instance, event) {
+            if (event.origin === "+input") {
+                CodeMirror.commands.autocomplete(instance, null, { completeSingle: false });
+            }
+        });
+
+        // Share button functionality
+        document.getElementById("shareButton").onclick = function() {
+            var code = editor.getValue();
+            var encodedCode = encodeURIComponent(code);
+            var shareUrl = window.location.origin + window.location.pathname + "?code=" + encodedCode;
+            prompt("Copy this link to share your code:", shareUrl);
+        };
+
+        // Load code from URL
+        window.onload = function() {
+            var urlParams = new URLSearchParams(window.location.search);
+            var code = urlParams.get('code');
+            if (code) {
+                editor.setValue(decodeURIComponent(code));
+            }
+        };
+    </script>
+</body>
+</html>
