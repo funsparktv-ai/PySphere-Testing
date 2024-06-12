@@ -145,8 +145,8 @@
             </select>
             <button id="runButton">Run Locally</button>
             <button id="saveButton">Save</button>
-            <button id="shareButton">Share Code</button>
             <button id="themeToggle">Toggle Dark Mode</button>
+            <button id="shareButton">Share</button>
         </div>
         <pre id="output"></pre>
     </div>
@@ -234,11 +234,20 @@
             switch (code) {
                 case "bmiCalculator":
                     editor.setValue(`# BMI Calculator
-height = float(input("Enter height in meters: "))
-weight = float(input("Enter weight in kilograms: "))
+def calculate_bmi(weight, height):
+    bmi = weight / (height ** 2)
+    if bmi < 18.5:
+        return "Underweight"
+    elif 18.5 <= bmi < 24.9:
+        return "Normal weight"
+    elif 25 <= bmi < 29.9:
+        return "Overweight"
+    else:
+        return "Obesity"
 
-bmi = weight / (height ** 2)
-print("Your BMI is:", bmi)`);
+weight = float(input("Enter your weight in kg: "))
+height = float(input("Enter your height in meters: "))
+print("Your BMI is", calculate_bmi(weight, height))`);
                     break;
                 case "simpleStorage":
                     editor.setValue(`# Simple Storage System
@@ -246,119 +255,167 @@ storage = {}
 
 def add_item(key, value):
     storage[key] = value
+    print(f"Item added: {key} -> {value}")
 
 def get_item(key):
-    return storage.get(key)
+    return storage.get(key, "Item not found")
 
-def remove_item(key):
-    if key in storage:
-        del storage[key]
-
-# Example usage
-add_item('name', 'John Doe')
-print(get_item('name'))
-remove_item('name')`);
+add_item("name", "John Doe")
+add_item("age", 30)
+print(get_item("name"))
+print(get_item("age"))
+print(get_item("gender"))`);
                     break;
                 case "fibonacciSequence":
                     editor.setValue(`# Fibonacci Sequence
 def fibonacci(n):
-    sequence = [0, 1]
-    while len(sequence) < n:
-        sequence.append(sequence[-1] + sequence[-2])
-    return sequence
+    a, b = 0, 1
+    for _ in range(n):
+        print(a, end=" ")
+        a, b = b, a + b
 
-n = int(input("Enter the number of Fibonacci numbers to generate: "))
-print(fibonacci(n))`);
+n = int(input("Enter the number of terms: "))
+fibonacci(n)`);
                     break;
                 case "primeChecker":
                     editor.setValue(`# Prime Number Checker
 def is_prime(n):
     if n <= 1:
         return False
-    for i in range(2, int(n ** 0.5) + 1):
+    for i in range(2, int(n**0.5) + 1):
         if n % i == 0:
             return False
     return True
 
-num = int(input("Enter a number to check if it is prime: "))
-print(f"{num} is prime: {is_prime(num)}")`);
+num = int(input("Enter a number: "))
+if is_prime(num):
+    print(num, "is a prime number")
+else:
+    print(num, "is not a prime number")`);
                     break;
                 case "basicCalculator":
                     editor.setValue(`# Basic Calculator
-def add(a, b):
-    return a + b
+def add(x, y):
+    return x + y
 
-def subtract(a, b):
-    return a - b
+def subtract(x, y):
+    return x - y
 
-def multiply(a, b):
-    return a * b
+def multiply(x, y):
+    return x * y
 
-def divide(a, b):
-    if b == 0:
-        return "Cannot divide by zero!"
-    return a / b
+def divide(x, y):
+    if y == 0:
+        return "Cannot divide by zero"
+    return x / y
 
-# Example usage
-print(add(2, 3))
-print(subtract(5, 2))
-print(multiply(3, 4))
-print(divide(10, 2))`);
+print("Select operation:")
+print("1. Add")
+print("2. Subtract")
+print("3. Multiply")
+print("4. Divide")
+
+choice = input("Enter choice(1/2/3/4): ")
+
+num1 = float(input("Enter first number: "))
+num2 = float(input("Enter second number: "))
+
+if choice == '1':
+    print(num1, "+", num2, "=", add(num1, num2))
+elif choice == '2':
+    print(num1, "-", num2, "=", subtract(num1, num2))
+elif choice == '3':
+    print(num1, "*", num2, "=", multiply(num1, num2))
+elif choice == '4':
+    print(num1, "/", num2, "=", divide(num1, num2))
+else:
+    print("Invalid input")`);
+                    break;
+                default:
+                    editor.setValue("");
                     break;
             }
         });
 
-        function showSuggestions(editor) {
-            var keywords = ["print", "for", "if", "else", "elif", "while", "def", "class", "return", "import"];
-            var cursor = editor.getCursor();
-            var token = editor.getTokenAt(cursor);
-            var start = token.start;
-            var end = cursor.ch;
-            var line = cursor.line;
-            var currentWord = token.string;
-
-            if (currentWord.length > 0) {
-                var list = keywords.filter(function (item) {
-                    return item.indexOf(currentWord) === 0;
-                }).sort();
-
-                if (list.length > 0) {
-                    return {
-                        list: list,
-                        from: CodeMirror.Pos(line, start),
-                        to: CodeMirror.Pos(line, end)
-                    };
-                }
+        document.getElementById('shareButton').addEventListener('click', function() {
+            var username = document.getElementById('username').value;
+            if (!username.trim()) {
+                alert('Please enter your username to share your code.');
+                return;
             }
-            return;
+            var code = encodeURIComponent(editor.getValue());
+            var url = `${window.location.origin}${window.location.pathname}?code=${code}&user=${encodeURIComponent(username)}`;
+            prompt('Copy this link to share your code:', url);
+        });
+
+        function getQueryParams() {
+            var params = {};
+            window.location.search.substring(1).split("&").forEach(function(pair) {
+                var parts = pair.split("=");
+                params[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+            });
+            return params;
         }
 
-        CodeMirror.registerHelper("hint", "python", function (editor) {
-            return showSuggestions(editor);
-        });
-
-        editor.on("inputRead", function(instance, event) {
-            if (event.origin === "+input") {
-                CodeMirror.commands.autocomplete(instance, null, { completeSingle: false });
+        window.addEventListener('load', function() {
+            var params = getQueryParams();
+            if (params.code) {
+                editor.setValue(params.code);
+            }
+            if (params.user) {
+                var username = decodeURIComponent(params.user);
+                alert(`By this link, you have received code from ${username}`);
             }
         });
 
-        // Share button functionality
-        document.getElementById("shareButton").onclick = function() {
-            var code = editor.getValue();
-            var encodedCode = encodeURIComponent(code);
-            var shareUrl = window.location.origin + window.location.pathname + "?code=" + encodedCode;
-            prompt("Copy this link to share your code:", shareUrl);
-        };
+        var keywords = [
+            "print", "for", "if", "else", "elif", "while", "def", "class", "return", "import", 
+            "from", "as", "with", "pass", "break", "continue", "try", "except", "finally", 
+            "raise", "global", "nonlocal", "assert", "yield", "lambda", "del", "True", "False", 
+            "None", "and", "or", "not", "is", "in", "self", "async", "await", "str", "int", 
+            "float", "list", "dict", "set", "tuple", "range", "len", "sum", "min", "max", 
+            "abs", "pow", "round", "sorted", "open", "input", "type", "id", "dir", "help", 
+            "isinstance", "hasattr", "getattr", "setattr", "delattr", "locals", "globals", 
+            "vars", "exec", "eval", "enumerate", "map", "filter", "reduce", "zip", "any", 
+            "all", "bin", "oct", "hex", "chr", "ord", "repr", "format", "memoryview", 
+            "bytearray", "bytes", "super", "property", "staticmethod", "classmethod", 
+            "staticmethod", "importlib", "itertools", "functools", "operator", "random", 
+            "math", "cmath", "decimal", "fractions", "statistics", "collections", 
+            "collections.abc", "heapq", "bisect", "array", "weakref", "types", "copy", 
+            "pprint", "reprlib", "enum", "numbers", "sys", "os", "io", "time", "threading", 
+            "multiprocessing", "subprocess", "sched", "signal", "contextlib", "abc", 
+            "atexit", "traceback", "warnings", "dataclasses", "pathlib", "typing", 
+            "unittest", "doctest", "pdb", "argparse", "configparser", "fileinput", 
+            "locale", "gettext", "string", "re", "struct", "codecs", "json", "pickle", 
+            "marshal", "sqlite3", "dbm", "zlib", "gzip", "bz2", "lzma", "shutil", 
+            "tarfile", "zipfile", "csv", "xml", "html", "http", "urllib", "webbrowser", 
+            "cgi", "cgitb", "wsgiref", "socket", "email", "mailbox", "smtplib", "poplib", 
+            "imaplib", "nntplib", "ftplib", "telnetlib", "uuid", "socketserver", 
+            "http.server", "http.client", "xmlrpc.client", "xmlrpc.server", "ipaddress", 
+            "hashlib", "hmac", "secrets", "ssl", "select", "selectors", "asyncio", "queue", 
+            "concurrent", "concurrent.futures", "contextvars", "asyncore", "asynchat", 
+            "tkinter", "turtle", "cmd", "shlex", "glob", "fnmatch", "tempfile", "datetime", 
+            "calendar", "zoneinfo", "abc", "argparse", "typing", "warnings", "traceback", 
+            "unittest", "doctest", "pdb", "inspect", "pyclbr", "sysconfig", "platform", 
+            "venv", "ensurepip", "distutils", "importlib", "zipimport", "pkgutil", "modulefinder"
+        ];
 
-        // Load code from URL
-        window.onload = function() {
-            var urlParams = new URLSearchParams(window.location.search);
-            var code = urlParams.get('code');
-            if (code) {
-                editor.setValue(decodeURIComponent(code));
+        editor.on("inputRead", function(cm, change) {
+            if (change.text[0] === ".") {
+                return;
             }
-        };
+            var cur = cm.getCursor();
+            var token = cm.getTokenAt(cur);
+            if (token.end > cur.ch) {
+                token.end = cur.ch;
+                token.string = token.string.slice(0, cur.ch - token.start);
+            }
+            if (token.string && keywords.includes(token.string)) {
+                cm.showHint({
+                    hint: CodeMirror.hint.anyword
+                });
+            }
+        });
     </script>
 </body>
 </html>
