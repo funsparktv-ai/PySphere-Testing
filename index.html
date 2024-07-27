@@ -387,6 +387,37 @@ else:
             }
         });
 
+        document.getElementById('installPackageButton').addEventListener('click', function() {
+            var packageName = document.getElementById('packageName').value;
+            if (packageName.trim()) {
+                installPackage(packageName);
+            } else {
+                alert('Please enter a package name.');
+            }
+        });
+
+        function installPackage(packageName) {
+            fetch('http://127.0.0.1:5000/install_package', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({package: packageName})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Package ${packageName} installed successfully!`);
+                } else {
+                    alert(`Failed to install package ${packageName}: ${data.error}`);
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('An error occurred while installing the package.');
+            });
+        }
+
         var keywords = [
             "print", "for", "if", "else", "elif", "while", "def", "class", "return", "import", 
             "from", "as", "with", "pass", "break", "continue", "try", "except", "finally", 
@@ -435,6 +466,7 @@ else:
                 });
             }
         });
+        
     </script>
 </body>
 </html>
