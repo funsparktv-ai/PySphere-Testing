@@ -397,12 +397,12 @@ else:
         });
 
         function installPackage(packageName) {
-            fetch('http://127.0.0.1:5000/install_package', {
+            fetch('http://127.0.0.1:5000/install_package', {  // Replace with your Flask server URL
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({package: packageName})
+                body: JSON.stringify({ package: packageName })
             })
             .then(response => response.json())
             .then(data => {
