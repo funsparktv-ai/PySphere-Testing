@@ -387,36 +387,33 @@ else:
             }
         });
 
-        document.getElementById('installPackageButton').addEventListener('click', function() {
-            var packageName = document.getElementById('packageName').value;
-            if (packageName.trim()) {
-                installPackage(packageName);
-            } else {
-                alert('Please enter a package name.');
-            }
+        document.getElementById('runButton').addEventListener('click', function() {
+            var code = editor.getValue();
+            runCodeOnServer(code);
         });
 
-        function installPackage(packageName) {
-            fetch('http://127.0.0.1:5000/install_package', {  // Replace with your Flask server URL
+        function runCodeOnServer(code) {
+            fetch('http://127.0.0.1:5000/execute_code', {  // Replace with your Flask server URL
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ package: packageName })
+                body: JSON.stringify({ code: code })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(`Package ${packageName} installed successfully!`);
+                    document.getElementById('output').innerText = data.output;
                 } else {
-                    alert(`Failed to install package ${packageName}: ${data.error}`);
+                    document.getElementById('output').innerText = `Error: ${data.error}`;
                 }
             })
             .catch((error) => {
                 console.error('Error:', error);
-                alert('An error occurred while installing the package.');
+                document.getElementById('output').innerText = 'An error occurred while executing the code.';
             });
         }
+
 
         var keywords = [
             "print", "for", "if", "else", "elif", "while", "def", "class", "return", "import", 
