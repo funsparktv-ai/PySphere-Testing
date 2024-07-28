@@ -452,25 +452,7 @@ else:
             "calendar", "zoneinfo", "abc", "argparse", "typing", "warnings", "traceback", 
             "unittest", "doctest", "pdb", "inspect", "pyclbr", "sysconfig", "platform", 
             "venv", "ensurepip", "distutils", "importlib", "zipimport", "pkgutil", "modulefinder"
-        ];
-
-        editor.on("inputRead", function(cm, change) {
-            if (change.text[0] === ".") {
-                return;
-            }
-            var cur = cm.getCursor();
-            var token = cm.getTokenAt(cur);
-            if (token.end > cur.ch) {
-                token.end = cur.ch;
-                token.string = token.string.slice(0, cur.ch - token.start);
-            }
-            if (token.string && keywords.includes(token.string)) {
-                cm.showHint({
-                    hint: CodeMirror.hint.anyword
-                });
-            }
-        });
-        
+        ];        
     </script>
 </body>
 </html>
