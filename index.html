@@ -217,7 +217,6 @@
             mypre.innerHTML += text;
         }
 
-        document.getElementById("runButton").onclick = runCode;
         document.getElementById("saveButton").onclick = function() {
             var username = document.getElementById('username').value;
             if (username.trim()) {
@@ -411,6 +410,37 @@ else:
             .catch((error) => {
                 console.error('Error:', error);
                 document.getElementById('output').innerText = 'An error occurred while executing the code.';
+            });
+        }
+
+        document.getElementById('installPackageButton').addEventListener('click', function() {
+            var packageName = document.getElementById('packageName').value;
+            if (packageName.trim()) {
+                installPackage(packageName);
+            } else {
+                alert('Please enter a package name.');
+            }
+        });
+
+        function installPackage(packageName) {
+            fetch('http://127.0.0.1:5000/install_package', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({package: packageName})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(Package ${packageName} installed successfully!);
+                } else {
+                    alert(Failed to install package ${packageName}: ${data.error});
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('An error occurred while installing the package.');
             });
         }
 
