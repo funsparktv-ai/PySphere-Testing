@@ -158,7 +158,8 @@
                 <option value="primeChecker">Prime Number Checker</option>
                 <option value="basicCalculator">Basic Calculator</option>
             </select>
-            <button id="runButton">Run Locally</button>
+            <button id="runLocallyButton">Run Locally</button>
+            <button id="runOnServerButton">Run on Server</button>
             <button id="saveButton">Save</button>
             <button id="themeToggle">Toggle Dark Mode</button>
             <button id="shareButton">Share</button>
@@ -325,7 +326,26 @@ else:
             }
         });
 
-        document.getElementById("runButton").addEventListener("click", function() {
+        document.getElementById("runLocallyButton").addEventListener("click", function() {
+            var code = editor.getValue();
+            Sk.configure({ output: outf, read: builtinRead });
+            var myPromise = Sk.misceval.asyncToPromise(function() {
+                return Sk.importMainWithBody("<stdin>", false, code, true);
+            });
+            myPromise.then(function(mod) {
+                console.log('success');
+            },
+            function(err) {
+                document.getElementById("output").innerText = err.toString();
+            });
+        });
+
+        function outf(text) {
+            var outputElement = document.getElementById("output");
+            outputElement.innerText += text;
+        }
+
+        document.getElementById("runOnServerButton").addEventListener("click", function() {
             var code = editor.getValue();
             runCodeOnServer(code);
         });
