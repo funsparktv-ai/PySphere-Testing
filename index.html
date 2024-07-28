@@ -193,7 +193,7 @@
                 throw "File not found: '" + x + "'";
             return Sk.builtinFiles["files"][x];
         }
-        
+
         document.getElementById("saveButton").onclick = function() {
             var username = document.getElementById('username').value;
             if (username.trim()) {
@@ -242,7 +242,7 @@ def calculate_bmi(weight, height):
 
 weight = float(input("Enter your weight in kg: "))
 height = float(input("Enter your height in meters: "))
-print("Your BMI is", calculate_bmi(weight, height))`);
+print("BMI category:", calculate_bmi(weight, height))`);
                     break;
                 case "simpleStorage":
                     editor.setValue(`# Simple Storage System
@@ -250,27 +250,24 @@ storage = {}
 
 def add_item(key, value):
     storage[key] = value
-    print(f"Item added: {key} -> {value}")
+    return "Item added"
 
 def get_item(key):
     return storage.get(key, "Item not found")
 
 add_item("name", "John Doe")
-add_item("age", 30)
-print(get_item("name"))
-print(get_item("age"))
-print(get_item("gender"))`);
+print(get_item("name"))`);
                     break;
                 case "fibonacciSequence":
                     editor.setValue(`# Fibonacci Sequence
 def fibonacci(n):
-    a, b = 0, 1
-    for _ in range(n):
-        print(a, end=" ")
-        a, b = b, a + b
+    sequence = [0, 1]
+    while len(sequence) < n:
+        sequence.append(sequence[-1] + sequence[-2])
+    return sequence
 
-n = int(input("Enter the number of terms: "))
-fibonacci(n)`);
+num = int(input("Enter a number: "))
+print(fibonacci(num))`);
                     break;
                 case "primeChecker":
                     editor.setValue(`# Prime Number Checker
@@ -283,10 +280,7 @@ def is_prime(n):
     return True
 
 num = int(input("Enter a number: "))
-if is_prime(num):
-    print(num, "is a prime number")
-else:
-    print(num, "is not a prime number")`);
+print("Is prime:", is_prime(num))`);
                     break;
                 case "basicCalculator":
                     editor.setValue(`# Basic Calculator
@@ -301,14 +295,14 @@ def multiply(x, y):
 
 def divide(x, y):
     if y == 0:
-        return "Cannot divide by zero"
+        return "Error! Division by zero."
     return x / y
 
 print("Select operation:")
-print("1. Add")
-print("2. Subtract")
-print("3. Multiply")
-print("4. Divide")
+print("1.Add")
+print("2.Subtract")
+print("3.Multiply")
+print("4.Divide")
 
 choice = input("Enter choice(1/2/3/4): ")
 
@@ -328,48 +322,16 @@ else:
                     break;
                 default:
                     editor.setValue("");
-                    break;
             }
         });
 
-        document.getElementById('shareButton').addEventListener('click', function() {
-            var username = document.getElementById('username').value;
-            if (!username.trim()) {
-                alert('Please enter your username to share your code.');
-                return;
-            }
-            var code = encodeURIComponent(editor.getValue());
-            var url = ${window.location.origin}${window.location.pathname}?code=${code}&user=${encodeURIComponent(username)};
-            prompt('Copy this link to share your code:', url);
-        });
-
-        function getQueryParams() {
-            var params = {};
-            window.location.search.substring(1).split("&").forEach(function(pair) {
-                var parts = pair.split("=");
-                params[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
-            });
-            return params;
-        }
-
-        window.addEventListener('load', function() {
-            var params = getQueryParams();
-            if (params.code) {
-                editor.setValue(params.code);
-            }
-            if (params.user) {
-                var username = decodeURIComponent(params.user);
-                alert(By this link, you have received code from ${username});
-            }
-        });
-
-        document.getElementById('runButton').addEventListener('click', function() {
+        document.getElementById("runButton").addEventListener("click", function() {
             var code = editor.getValue();
             runCodeOnServer(code);
         });
 
         function runCodeOnServer(code) {
-            fetch('http://127.0.0.1:5000/execute_code', {  // Replace with your Flask server URL
+            fetch('http://127.0.0.1:5000/execute_code', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -381,7 +343,7 @@ else:
                 if (data.success) {
                     document.getElementById('output').innerText = data.output;
                 } else {
-                    document.getElementById('output').innerText = Error: ${data.error};
+                    document.getElementById('output').innerText = `Error: ${data.error}`;
                 }
             })
             .catch((error) => {
@@ -391,9 +353,11 @@ else:
         }
 
         document.getElementById('installPackageButton').addEventListener('click', function() {
-            var packageName = document.getElementById('packageName').value;
-            if (packageName.trim()) {
-                installPackage(packageName);
+            var packageName = document.getElementById('packageName').value.trim();
+            if (packageName) {
+                if (confirm(`Would you like to install the package "${packageName}"?`)) {
+                    installPackage(packageName);
+                }
             } else {
                 alert('Please enter a package name.');
             }
@@ -405,54 +369,36 @@ else:
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({package: packageName})
+                body: JSON.stringify({ package: packageName })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(Package ${packageName} installed successfully!);
+                    alert(`Package "${packageName}" installed successfully.`);
                 } else {
-                    alert(Failed to install package ${packageName}: ${data.error});
+                    alert(`Error: ${data.error}`);
                 }
             })
             .catch((error) => {
                 console.error('Error:', error);
                 alert('An error occurred while installing the package.');
-            });
-        }
+            });
+        }
 
-
-        var keywords = [
-            "print", "for", "if", "else", "elif", "while", "def", "class", "return", "import", 
-            "from", "as", "with", "pass", "break", "continue", "try", "except", "finally", 
-            "raise", "global", "nonlocal", "assert", "yield", "lambda", "del", "True", "False", 
-            "None", "and", "or", "not", "is", "in", "self", "async", "await", "str", "int", 
-            "float", "list", "dict", "set", "tuple", "range", "len", "sum", "min", "max", 
-            "abs", "pow", "round", "sorted", "open", "input", "type", "id", "dir", "help", 
-            "isinstance", "hasattr", "getattr", "setattr", "delattr", "locals", "globals", 
-            "vars", "exec", "eval", "enumerate", "map", "filter", "reduce", "zip", "any", 
-            "all", "bin", "oct", "hex", "chr", "ord", "repr", "format", "memoryview", 
-            "bytearray", "bytes", "super", "property", "staticmethod", "classmethod", 
-            "staticmethod", "importlib", "itertools", "functools", "operator", "random", 
-            "math", "cmath", "decimal", "fractions", "statistics", "collections", 
-            "collections.abc", "heapq", "bisect", "array", "weakref", "types", "copy", 
-            "pprint", "reprlib", "enum", "numbers", "sys", "os", "io", "time", "threading", 
-            "multiprocessing", "subprocess", "sched", "signal", "contextlib", "abc", 
-            "atexit", "traceback", "warnings", "dataclasses", "pathlib", "typing", 
-            "unittest", "doctest", "pdb", "argparse", "configparser", "fileinput", 
-            "locale", "gettext", "string", "re", "struct", "codecs", "json", "pickle", 
-            "marshal", "sqlite3", "dbm", "zlib", "gzip", "bz2", "lzma", "shutil", 
-            "tarfile", "zipfile", "csv", "xml", "html", "http", "urllib", "webbrowser", 
-            "cgi", "cgitb", "wsgiref", "socket", "email", "mailbox", "smtplib", "poplib", 
-            "imaplib", "nntplib", "ftplib", "telnetlib", "uuid", "socketserver", 
-            "http.server", "http.client", "xmlrpc.client", "xmlrpc.server", "ipaddress", 
-            "hashlib", "hmac", "secrets", "ssl", "select", "selectors", "asyncio", "queue", 
-            "concurrent", "concurrent.futures", "contextvars", "asyncore", "asynchat", 
-            "tkinter", "turtle", "cmd", "shlex", "glob", "fnmatch", "tempfile", "datetime", 
-            "calendar", "zoneinfo", "abc", "argparse", "typing", "warnings", "traceback", 
-            "unittest", "doctest", "pdb", "inspect", "pyclbr", "sysconfig", "platform", 
-            "venv", "ensurepip", "distutils", "importlib", "zipimport", "pkgutil", "modulefinder"
-        ];        
+        document.getElementById('shareButton').addEventListener('click', function() {
+            var username = document.getElementById('username').value;
+            if (username.trim()) {
+                var code = editor.getValue();
+                var link = document.createElement('a');
+                var blob = new Blob([code], { type: 'text/plain' });
+                var url = URL.createObjectURL(blob);
+                link.href = url;
+                link.download = `${username}_pythonCode.py`;
+                link.click();
+            } else {
+                alert('Please enter a username to share your code.');
+            }
+        });
     </script>
 </body>
 </html>
