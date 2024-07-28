@@ -351,7 +351,7 @@ else:
         });
 
         function runCodeOnServer(code) {
-            fetch('http://127.0.0.1:5000/execute_code', {
+            fetch('https://pysphere.pythonanywhere.com/execute_code', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -384,7 +384,7 @@ else:
         });
 
         function installPackage(packageName) {
-            fetch('http://127.0.0.1:5000/install_package', {
+            fetch('https://pysphere.pythonanywhere.com/install_package', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
