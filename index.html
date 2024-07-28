@@ -158,7 +158,7 @@
                 <option value="primeChecker">Prime Number Checker</option>
                 <option value="basicCalculator">Basic Calculator</option>
             </select>
-            <button id="runButton">Run Locally</button>
+            <button id="runButton">Run</button>
             <button id="saveButton">Save</button>
             <button id="themeToggle">Toggle Dark Mode</button>
             <button id="shareButton">Share</button>
@@ -173,8 +173,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/python-hint.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.0.0/dist/skulpt.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.0.0/dist/skulpt-stdlib.js"></script>
     <script>
         var editor = CodeMirror.fromTextArea(document.getElementById('code'), {
             mode: "python",
@@ -188,39 +186,34 @@
 
         var globalScope = {};
 
-        function builtinRead(x) {
-            if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
-                throw "File not found: '" + x + "'";
-            return Sk.builtinFiles["files"][x];
-        }
-
         function runCode() {
-            var prog = editor.getValue();
-            var mypre = document.getElementById("output");
-            mypre.innerHTML = '';
-            Sk.pre = "output";
-            Sk.configure({ output: outf, read: builtinRead });
-            var myPromise = Sk.misceval.asyncToPromise(function() {
-                return Sk.importMainWithBody("<stdin>", false, prog, true);
+            var code = editor.getValue();
+            fetch('http://127.0.0.1:5000/execute_code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ code: code })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('output').innerText = data.output;
+                } else {
+                    document.getElementById('output').innerText = `Error: ${data.error}`;
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                document.getElementById('output').innerText = 'An error occurred while executing the code.';
             });
-            myPromise.then(function(mod) {
-                globalScope = mod.$d;
-                console.log('success');
-            },
-                function(err) {
-                    mypre.innerHTML = err.toString();
-                });
-        }
-
-        function outf(text) {
-            var mypre = document.getElementById("output");
-            mypre.innerHTML += text;
         }
 
         document.getElementById("saveButton").onclick = function() {
             var username = document.getElementById('username').value;
             if (username.trim()) {
                 localStorage.setItem(username + '_pythonCode', editor.getValue());
+                alert('Code saved successfully!');
             } else {
                 alert('Please enter a username to save your code.');
             }
@@ -244,6 +237,7 @@
 
         document.getElementById("themeToggle").addEventListener("click", function() {
             document.body.classList.toggle("dark-mode");
+            editor.setOption("theme", document.body.classList.contains("dark-mode") ? "monokai" : "eclipse");
         });
 
         document.getElementById("presetCodes").addEventListener("change", function() {
@@ -362,56 +356,16 @@ else:
                 return;
             }
             var code = encodeURIComponent(editor.getValue());
-            var url = ${window.location.origin}${window.location.pathname}?code=${code}&user=${encodeURIComponent(username)};
-            prompt('Copy this link to share your code:', url);
-        });
-
-        function getQueryParams() {
-            var params = {};
-            window.location.search.substring(1).split("&").forEach(function(pair) {
-                var parts = pair.split("=");
-                params[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+            var url = `${window.location.origin}${window.location.pathname}?code=${code}&user=${encodeURIComponent(username)}`;
+            navigator.clipboard.writeText(url).then(function() {
+                alert('Share link copied to clipboard!');
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+                prompt('Copy this link to share your code:', url);
             });
-            return params;
-        }
-
-        window.addEventListener('load', function() {
-            var params = getQueryParams();
-            if (params.code) {
-                editor.setValue(params.code);
-            }
-            if (params.user) {
-                var username = decodeURIComponent(params.user);
-                alert(By this link, you have received code from ${username});
-            }
         });
 
-        document.getElementById('runButton').addEventListener('click', function() {
-            var code = editor.getValue();
-            runCodeOnServer(code);
-        });
-
-        function runCodeOnServer(code) {
-            fetch('http://127.0.0.1:5000/execute_code', {  // Replace with your Flask server URL
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ code: code })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('output').innerText = data.output;
-                } else {
-                    document.getElementById('output').innerText = Error: ${data.error};
-                }
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                document.getElementById('output').innerText = 'An error occurred while executing the code.';
-            });
-        }
+        document.getElementById('runButton').addEventListener('click', runCode);
 
         document.getElementById('installPackageButton').addEventListener('click', function() {
             var packageName = document.getElementById('packageName').value;
@@ -433,9 +387,9 @@ else:
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(Package ${packageName} installed successfully!);
+                    alert(`Package ${packageName} installed successfully!`);
                 } else {
-                    alert(Failed to install package ${packageName}: ${data.error});
+                    alert(`Failed to install package ${packageName}: ${data.error}`);
                 }
             })
             .catch((error) => {
@@ -443,7 +397,6 @@ else:
                 alert('An error occurred while installing the package.');
             });
         }
-
 
         var keywords = [
             "print", "for", "if", "else", "elif", "while", "def", "class", "return", "import", 
