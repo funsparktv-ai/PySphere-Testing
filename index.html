@@ -185,8 +185,6 @@
             extraKeys: {"Ctrl-Space": "autocomplete"}
         });
 
-        var globalScope = {};
-
         function runCode() {
             var code = editor.getValue();
             fetch('http://127.0.0.1:5000/execute_code', {
@@ -209,174 +207,6 @@
                 document.getElementById('output').innerText = 'An error occurred while executing the code.';
             });
         }
-        
-        document.getElementById('runButton').addEventListener('click', runCode);
-        document.getElementById("saveButton").onclick = function() {
-            var username = document.getElementById('username').value;
-            if (username.trim()) {
-                localStorage.setItem(username + '_pythonCode', editor.getValue());
-                alert('Code saved successfully!');
-            } else {
-                alert('Please enter a username to save your code.');
-            }
-        };
-
-        function loadCode() {
-            var username = document.getElementById('username').value;
-            if (username.trim()) {
-                var storedCode = localStorage.getItem(username + '_pythonCode');
-                if (storedCode) {
-                    editor.setValue(storedCode);
-                } else {
-                    alert('No saved code found for this username.');
-                }
-            } else {
-                alert('Please enter a username to load your code.');
-            }
-        }
-
-        document.getElementById('username').addEventListener('blur', loadCode);
-
-        document.getElementById("themeToggle").addEventListener("click", function() {
-            document.body.classList.toggle("dark-mode");
-            editor.setOption("theme", document.body.classList.contains("dark-mode") ? "monokai" : "eclipse");
-        });
-
-        document.getElementById("presetCodes").addEventListener("change", function() {
-            var code = this.value;
-            if (code === "") return;
-            switch (code) {
-                case "bmiCalculator":
-                    editor.setValue(`# BMI Calculator
-def calculate_bmi(weight, height):
-    bmi = weight / (height ** 2)
-    if bmi < 18.5:
-        return "Underweight"
-    elif 18.5 <= bmi < 24.9:
-        return "Normal weight"
-    elif 25 <= bmi < 29.9:
-        return "Overweight"
-    else:
-        return "Obesity"
-
-weight = float(input("Enter your weight in kg: "))
-height = float(input("Enter your height in meters: "))
-print("Your BMI is", calculate_bmi(weight, height))`);
-                    break;
-                case "simpleStorage":
-                    editor.setValue(`# Simple Storage System
-storage = {}
-
-def add_item(key, value):
-    storage[key] = value
-    print(f"Item added: {key} -> {value}")
-
-def get_item(key):
-    return storage.get(key, "Item not found")
-
-add_item("name", "John Doe")
-add_item("age", 30)
-print(get_item("name"))
-print(get_item("age"))
-print(get_item("gender"))`);
-                    break;
-                case "fibonacciSequence":
-                    editor.setValue(`# Fibonacci Sequence
-def fibonacci(n):
-    a, b = 0, 1
-    for _ in range(n):
-        print(a, end=" ")
-        a, b = b, a + b
-
-n = int(input("Enter the number of terms: "))
-fibonacci(n)`);
-                    break;
-                case "primeChecker":
-                    editor.setValue(`# Prime Number Checker
-def is_prime(n):
-    if n <= 1:
-        return False
-    for i in range(2, int(n**0.5) + 1):
-        if n % i == 0:
-            return False
-    return True
-
-num = int(input("Enter a number: "))
-if is_prime(num):
-    print(num, "is a prime number")
-else:
-    print(num, "is not a prime number")`);
-                    break;
-                case "basicCalculator":
-                    editor.setValue(`# Basic Calculator
-def add(x, y):
-    return x + y
-
-def subtract(x, y):
-    return x - y
-
-def multiply(x, y):
-    return x * y
-
-def divide(x, y):
-    if y == 0:
-        return "Cannot divide by zero"
-    return x / y
-
-print("Select operation:")
-print("1. Add")
-print("2. Subtract")
-print("3. Multiply")
-print("4. Divide")
-
-choice = input("Enter choice(1/2/3/4): ")
-
-num1 = float(input("Enter first number: "))
-num2 = float(input("Enter second number: "))
-
-if choice == '1':
-    print(num1, "+", num2, "=", add(num1, num2))
-elif choice == '2':
-    print(num1, "-", num2, "=", subtract(num1, num2))
-elif choice == '3':
-    print(num1, "*", num2, "=", multiply(num1, num2))
-elif choice == '4':
-    print(num1, "/", num2, "=", divide(num1, num2))
-else:
-    print("Invalid input")`);
-                    break;
-                default:
-                    editor.setValue("");
-                    break;
-            }
-        });
-
-        document.getElementById('shareButton').addEventListener('click', function() {
-            var username = document.getElementById('username').value;
-            if (!username.trim()) {
-                alert('Please enter your username to share your code.');
-                return;
-            }
-            var code = encodeURIComponent(editor.getValue());
-            var url = `${window.location.origin}${window.location.pathname}?code=${code}&user=${encodeURIComponent(username)}`;
-            navigator.clipboard.writeText(url).then(function() {
-                alert('Share link copied to clipboard!');
-            }, function(err) {
-                console.error('Could not copy text: ', err);
-                prompt('Copy this link to share your code:', url);
-            });
-        });
-
-        document.getElementById('runButton').addEventListener('click', runCode);
-
-        document.getElementById('installPackageButton').addEventListener('click', function() {
-            var packageName = document.getElementById('packageName').value;
-            if (packageName.trim()) {
-                installPackage(packageName);
-            } else {
-                alert('Please enter a package name.');
-            }
-        });
 
         function installPackage(packageName) {
             fetch('http://127.0.0.1:5000/install_package', {
@@ -384,7 +214,7 @@ else:
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({package: packageName})
+                body: JSON.stringify({ package: packageName })
             })
             .then(response => response.json())
             .then(data => {
@@ -400,55 +230,90 @@ else:
             });
         }
 
-        var keywords = [
-            "print", "for", "if", "else", "elif", "while", "def", "class", "return", "import", 
-            "from", "as", "with", "pass", "break", "continue", "try", "except", "finally", 
-            "raise", "global", "nonlocal", "assert", "yield", "lambda", "del", "True", "False", 
-            "None", "and", "or", "not", "is", "in", "self", "async", "await", "str", "int", 
-            "float", "list", "dict", "set", "tuple", "range", "len", "sum", "min", "max", 
-            "abs", "pow", "round", "sorted", "open", "input", "type", "id", "dir", "help", 
-            "isinstance", "hasattr", "getattr", "setattr", "delattr", "locals", "globals", 
-            "vars", "exec", "eval", "enumerate", "map", "filter", "reduce", "zip", "any", 
-            "all", "bin", "oct", "hex", "chr", "ord", "repr", "format", "memoryview", 
-            "bytearray", "bytes", "super", "property", "staticmethod", "classmethod", 
-            "staticmethod", "importlib", "itertools", "functools", "operator", "random", 
-            "math", "cmath", "decimal", "fractions", "statistics", "collections", 
-            "collections.abc", "heapq", "bisect", "array", "weakref", "types", "copy", 
-            "pprint", "reprlib", "enum", "numbers", "sys", "os", "io", "time", "threading", 
-            "multiprocessing", "subprocess", "sched", "signal", "contextlib", "abc", 
-            "atexit", "traceback", "warnings", "dataclasses", "pathlib", "typing", 
-            "unittest", "doctest", "pdb", "argparse", "configparser", "fileinput", 
-            "locale", "gettext", "string", "re", "struct", "codecs", "json", "pickle", 
-            "marshal", "sqlite3", "dbm", "zlib", "gzip", "bz2", "lzma", "shutil", 
-            "tarfile", "zipfile", "csv", "xml", "html", "http", "urllib", "webbrowser", 
-            "cgi", "cgitb", "wsgiref", "socket", "email", "mailbox", "smtplib", "poplib", 
-            "imaplib", "nntplib", "ftplib", "telnetlib", "uuid", "socketserver", 
-            "http.server", "http.client", "xmlrpc.client", "xmlrpc.server", "ipaddress", 
-            "hashlib", "hmac", "secrets", "ssl", "select", "selectors", "asyncio", "queue", 
-            "concurrent", "concurrent.futures", "contextvars", "asyncore", "asynchat", 
-            "tkinter", "turtle", "cmd", "shlex", "glob", "fnmatch", "tempfile", "datetime", 
-            "calendar", "zoneinfo", "abc", "argparse", "typing", "warnings", "traceback", 
-            "unittest", "doctest", "pdb", "inspect", "pyclbr", "sysconfig", "platform", 
-            "venv", "ensurepip", "distutils", "importlib", "zipimport", "pkgutil", "modulefinder"
-        ];
+        document.getElementById('runButton').addEventListener('click', runCode);
+        document.getElementById('installPackageButton').addEventListener('click', () => {
+            var packageName = document.getElementById('packageName').value;
+            installPackage(packageName);
+        });
 
-        editor.on("inputRead", function(cm, change) {
-            if (change.text[0] === ".") {
+        document.getElementById('presetCodes').addEventListener('change', (event) => {
+            var presetCode = event.target.value;
+            fetch(`http://127.0.0.1:5000/get_preset_code?name=${presetCode}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    editor.setValue(data.code);
+                } else {
+                    alert(`Failed to load preset code: ${data.error}`);
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('An error occurred while fetching the preset code.');
+            });
+        });
+
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            editor.setOption('theme', document.body.classList.contains('dark-mode') ? 'monokai' : 'eclipse');
+        });
+
+        // Add username functionality to save and share buttons
+        document.getElementById('saveButton').addEventListener('click', () => {
+            var code = editor.getValue();
+            var username = document.getElementById('username').value;
+            if (!username) {
+                alert('Please enter your username before saving the code.');
                 return;
             }
-            var cur = cm.getCursor();
-            var token = cm.getTokenAt(cur);
-            if (token.end > cur.ch) {
-                token.end = cur.ch;
-                token.string = token.string.slice(0, cur.ch - token.start);
-            }
-            if (token.string && keywords.includes(token.string)) {
-                cm.showHint({
-                    hint: CodeMirror.hint.anyword
-                });
-            }
+            fetch('http://127.0.0.1:5000/save_code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: username, code: code })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Code saved successfully!');
+                } else {
+                    alert(`Failed to save code: ${data.error}`);
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('An error occurred while saving the code.');
+            });
         });
-        
+
+        document.getElementById('shareButton').addEventListener('click', () => {
+            var code = editor.getValue();
+            var username = document.getElementById('username').value;
+            if (!username) {
+                alert('Please enter your username before sharing the code.');
+                return;
+            }
+            fetch('http://127.0.0.1:5000/share_code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: username, code: code })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Code shared successfully!');
+                } else {
+                    alert(`Failed to share code: ${data.error}`);
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('An error occurred while sharing the code.');
+            });
+        });
     </script>
 </body>
 </html>
